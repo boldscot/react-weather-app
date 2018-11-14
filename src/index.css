@@ -1,0 +1,19 @@
+.day {
+	outline: 1px solid black;
+	width: 80px;
+}
+
+.name {
+	text-align: center;
+}
+
+.weather-image {
+	display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 50%;
+}
+
+.temps {
+	text-align: center;
+}
