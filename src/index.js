@@ -27,8 +27,9 @@ const aWeek = [
 function TheWeeksWeather({days}) {
 	return(
 		<div className= "week-weather"> 
-			
-
+			{days.map(day => (
+				<Day day={day} key={day.name}/>
+			))}
 		</div>
 	);
 }
@@ -80,5 +81,4 @@ WeatherImage.propTypes = {
 	weather: PropTypes.string.isRequired
 }
 
-//ReactDOM.render(<TheWeeksWeather days={aWeek} />, document.getElementById('root'));
-ReactDOM.render(<Day day={aWeek[4]} />, document.getElementById('root'));
+ReactDOM.render(<TheWeeksWeather days={aWeek} />, document.getElementById('root'));

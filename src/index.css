@@ -1,6 +1,7 @@
 .day {
 	outline: 1px solid black;
 	width: 80px;
+	float: left;
 }
 
 .name {
