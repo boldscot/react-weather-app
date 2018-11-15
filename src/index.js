@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
+import axios from 'axios';
 import './index.css'; 
 
 function OneDay(name, highTemp, lowTemp, weather) {
@@ -10,28 +11,75 @@ function OneDay(name, highTemp, lowTemp, weather) {
 	this.weather = weather;
 }
 
-// Hardcoded fake data
-const monday = new OneDay("Mon", 13, 11, "rain");
-const tuesday = new OneDay("Tue", 14, 8, "rain");
-const wednesday = new OneDay("Wen", 13, 11, "cloudy");
-const thursday = new OneDay("Thu", 13, 7, "cloudy");
-const friday = new OneDay("Fri", 11, 6, "sunny");
-const saturday = new OneDay("Sat", 8, 6, "rain_s_cloudy");
-const sunday = new OneDay("Sun", 8, 4, "cloudy");
+class App extends React.Component {
+	constructor(props) {
+		super(props);
 
-const aWeek = [
-	monday, tuesday, wednesday,
-	thursday, friday, saturday, sunday	
-]
+		this.state = {
+			data: [],
+			nextFiveDays: []
+		};
+	}
 
-function TheWeeksWeather({days}) {
-	return(
-		<div className= "week-weather"> 
-			{days.map(day => (
-				<Day day={day} key={day.name}/>
-			))}
-		</div>
-	);
+	componentDidMount() {
+	  axios.get('https://api.openweathermap.org/data/2.5/forecast?id=2960991&APPID=cb6f52333c98f1ed947e3bb5de394074&units=metric')
+	  	.then(res => {
+	  		//console.log(res);
+      		const data = res.data.list.map(obj => obj);
+      		this.setState({
+      			data: data
+      		});
+
+      		this.getFiveDayForecast(this.state.data);
+    	});
+	} 
+
+	getFiveDayForecast(data) {
+		if (data.length === 0) return;
+
+		let currentDate = data[0].dt_txt.substring(8, 10);
+		let days = [];
+
+		days.push(data[0]);
+
+		for (let i = 1; i < data.length; ++i) {
+			// use 1st entry of a day for the daily weather
+			if(data[i].dt_txt.substring(8, 10) !== currentDate.toString()) {
+				days.push(data[i]);
+				++currentDate;
+			}
+		}
+		console.log(days);
+
+		this.createDayObjects(days);
+	}
+
+	createDayObjects(days) {
+		let nextFiveDays = [];
+
+		for (let i = 0; i < days.length; i++) {
+			let dayName = new Date(days[i].dt_txt).toLocaleDateString("ire", {weekday: 'short'});
+			let weatherIcon = days[i].weather[0].icon;
+			let highTemp = Math.round(days[i].main.temp_max);
+			let lowTemp = Math.round(days[i].main.temp_min);
+
+			nextFiveDays[i] = new OneDay(dayName, highTemp, lowTemp, weatherIcon);
+		}
+
+		this.setState({
+			nextFiveDays: nextFiveDays
+		});
+	}
+
+	render() {
+		return (
+      		<div> 
+      			{this.state.nextFiveDays.map(day => (
+      				<Day day={day} key={day.name}/>
+      		 	))}
+      		 </div>
+    	);
+  	}
 }
 
 function Day({day}) {
@@ -56,7 +104,7 @@ TheDayName.propTypes = {
 
 const TempValues = ({highTemp, lowTemp}) => (
 	<div className="temps">
-		{highTemp} {lowTemp}
+		{highTemp}<sup>o</sup> {lowTemp}<sup>o</sup>
 	</div>
 )
 
@@ -66,7 +114,7 @@ TempValues.propTypes = {
 }
 
 function WeatherImage({weather}) {
-	let url = require(`../images/${weather}.png`);
+	let url = `http://openweathermap.org/img/w/${weather}.png`;
 
 	return(
 		<img
@@ -81,4 +129,4 @@ WeatherImage.propTypes = {
 	weather: PropTypes.string.isRequired
 }
 
-ReactDOM.render(<TheWeeksWeather days={aWeek} />, document.getElementById('root'));
+ReactDOM.render(<App />, document.getElementById('root'));
