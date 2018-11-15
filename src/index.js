@@ -24,7 +24,7 @@ class App extends React.Component {
 	componentDidMount() {
 	  axios.get('https://api.openweathermap.org/data/2.5/forecast?id=2960991&APPID=cb6f52333c98f1ed947e3bb5de394074&units=metric')
 	  	.then(res => {
-	  		//console.log(res);
+	  		console.log(res);
       		const data = res.data.list.map(obj => obj);
       		this.setState({
       			data: data
@@ -39,18 +39,27 @@ class App extends React.Component {
 
 		let currentDate = data[0].dt_txt.substring(8, 10);
 		let days = [];
+		let day = [];
 
-		days.push(data[0]);
+		day.push(data[0]);
 
 		for (let i = 1; i < data.length; ++i) {
-			// use 1st entry of a day for the daily weather
+
+			if(i === data.length-1) {
+				day.push(data[i]);
+				days.push(day);
+			}
+
 			if(data[i].dt_txt.substring(8, 10) !== currentDate.toString()) {
-				days.push(data[i]);
+				day.push(data[i-1]);
+				days.push(day);
+
+				day = [];
+				day.push(data[i]);
 				++currentDate;
 			}
 		}
-		console.log(days);
-
+		
 		this.createDayObjects(days);
 	}
 
@@ -58,10 +67,11 @@ class App extends React.Component {
 		let nextFiveDays = [];
 
 		for (let i = 0; i < days.length; i++) {
-			let dayName = new Date(days[i].dt_txt).toLocaleDateString("ire", {weekday: 'short'});
-			let weatherIcon = days[i].weather[0].icon;
-			let highTemp = Math.round(days[i].main.temp_max);
-			let lowTemp = Math.round(days[i].main.temp_min);
+			let dayName = new Date(days[i][0].dt_txt).toLocaleDateString("ire", {weekday: 'short'});
+			let weatherIcon = days[i][0].weather[0].icon;
+
+			let highTemp = Math.round((days[i][0].main.temp_max + days[i][1].main.temp_max) /2);
+			let lowTemp = Math.round((days[i][0].main.temp_min + days[i][1].main.temp_min) /2);
 
 			nextFiveDays[i] = new OneDay(dayName, highTemp, lowTemp, weatherIcon);
 		}
