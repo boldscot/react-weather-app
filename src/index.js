@@ -44,22 +44,23 @@ class App extends React.Component {
 		day.push(data[0]);
 
 		for (let i = 1; i < data.length; ++i) {
-
-			if(i === data.length-1) {
+			if (data[i].dt_txt.substring(8, 10) === currentDate.toString()) {
 				day.push(data[i]);
-				days.push(day);
-			}
 
-			if(data[i].dt_txt.substring(8, 10) !== currentDate.toString()) {
-				day.push(data[i-1]);
+				if(i === data.length-1) {
+					days.push(day);
+				}
+				
+			} else {
+				//add day to days array
 				days.push(day);
-
+				// clear day array
 				day = [];
-				day.push(data[i]);
 				++currentDate;
 			}
 		}
-		
+
+		console.log("the days array", days);
 		this.createDayObjects(days);
 	}
 
@@ -70,8 +71,20 @@ class App extends React.Component {
 			let dayName = new Date(days[i][0].dt_txt).toLocaleDateString("ire", {weekday: 'short'});
 			let weatherIcon = days[i][0].weather[0].icon;
 
-			let highTemp = Math.round((days[i][0].main.temp_max + days[i][1].main.temp_max) /2);
-			let lowTemp = Math.round((days[i][0].main.temp_min + days[i][1].main.temp_min) /2);
+			let numbers = [];
+			for (let j = 0; j < days[i].length; j++) {
+				numbers.push(days[i][j].main.temp_max);
+			}
+
+			let highTemp = Math.round(this.findHighestNumber(numbers));
+
+			// clear the number array
+			numbers =[];
+			for (let j = 0; j < days[i].length; j++) {
+				numbers.push(days[i][j].main.temp_min);
+			}
+
+			let lowTemp = Math.round(this.findLowestNumber(numbers));
 
 			nextFiveDays[i] = new OneDay(dayName, highTemp, lowTemp, weatherIcon);
 		}
@@ -79,6 +92,28 @@ class App extends React.Component {
 		this.setState({
 			nextFiveDays: nextFiveDays
 		});
+	}
+
+	findHighestNumber(array) {
+		let highest = 0;
+
+		for (let i = 0; i < array.length; i++) {
+			if (array[i] > highest) {
+				highest = array[i];
+			}
+		}
+		return highest;
+	}
+
+	findLowestNumber(array) {
+		let lowest = 9999999;
+
+		for (let i = 0; i < array.length; i++) {
+			if (array[i] < lowest) {
+				lowest = array[i];
+			}
+		}
+		return lowest;
 	}
 
 	render() {
@@ -129,8 +164,8 @@ function WeatherImage({weather}) {
 	return(
 		<img
 			src={url}
-			className="weather-image"
-			alt="image"
+			className="weather-icon"
+			alt="weather-icon"
 		/>		
 	);
 }
