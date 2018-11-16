@@ -4,11 +4,33 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 import './index.css'; 
 
-function OneDay(name, highTemp, lowTemp, weather) {
-	this.name = name;
+function WeatherEntity(title, highTemp, lowTemp, icon) {
+	this.title = title;
 	this.highTemp = highTemp;
 	this.lowTemp = lowTemp;
-	this.weather = weather;
+	this.icon = icon;
+}
+
+function findHighestNumber(array) {
+	let highest = 0;
+
+	for (let i = 0; i < array.length; i++) {
+		if (array[i] > highest) {
+			highest = array[i];
+		}
+	}
+	return highest;
+}
+
+function findLowestNumber(array) {
+	let lowest = 9999999;
+
+	for (let i = 0; i < array.length; i++) {
+		if (array[i] < lowest) {
+			lowest = array[i];
+			}
+	}
+	return lowest;
 }
 
 class App extends React.Component {
@@ -17,7 +39,9 @@ class App extends React.Component {
 
 		this.state = {
 			data: [],
-			nextFiveDays: []
+			nextFiveDays: [],
+			selectedDay: new Date().toLocaleDateString("ire",{weekday: 'short'}),
+			selectedDayWeather: []
 		};
 	}
 
@@ -49,8 +73,7 @@ class App extends React.Component {
 
 				if(i === data.length-1) {
 					days.push(day);
-				}
-				
+				}	
 			} else {
 				//add day to days array
 				days.push(day);
@@ -60,33 +83,50 @@ class App extends React.Component {
 			}
 		}
 
-		console.log("the days array", days);
-		this.createDayObjects(days);
+		this.createWeatherEntries(days);
+		console.log(days);
 	}
 
-	createDayObjects(days) {
+	createWeatherEntries(data) {
 		let nextFiveDays = [];
 
-		for (let i = 0; i < days.length; i++) {
-			let dayName = new Date(days[i][0].dt_txt).toLocaleDateString("ire", {weekday: 'short'});
-			let weatherIcon = days[i][0].weather[0].icon;
+		for (let i = 0; i < data.length; i++) {
+			let title = new Date(data[i][0].dt_txt).toLocaleDateString("ire",{weekday: 'short'});
+			let weatherIcon = data[i][0].weather[0].icon;
 
 			let numbers = [];
-			for (let j = 0; j < days[i].length; j++) {
-				numbers.push(days[i][j].main.temp_max);
+			for (let j = 0; j < data[i].length; j++) {
+				numbers.push(data[i][j].main.temp_max);
 			}
 
-			let highTemp = Math.round(this.findHighestNumber(numbers));
+			let highTemp = Math.round(findHighestNumber(numbers));
 
 			// clear the number array
 			numbers =[];
-			for (let j = 0; j < days[i].length; j++) {
-				numbers.push(days[i][j].main.temp_min);
+			for (let j = 0; j < data[i].length; j++) {
+				numbers.push(data[i][j].main.temp_min);
 			}
 
-			let lowTemp = Math.round(this.findLowestNumber(numbers));
+			let lowTemp = Math.round(findLowestNumber(numbers));
 
-			nextFiveDays[i] = new OneDay(dayName, highTemp, lowTemp, weatherIcon);
+			nextFiveDays[i] = new WeatherEntity(title, highTemp, lowTemp, weatherIcon);
+
+			if(title === this.state.selectedDay) {
+				let hourlyWeather = [];
+
+				for (let j = 0; j < data[i].length; j++) {
+					let title = data[i][j].dt_txt.substring(11, 16);
+					let weatherIcon = data[i][j].weather[0].icon;
+					let highTemp = data[i][j].main.temp_max;
+					let lowTemp= data[i][j].main.temp_min;
+
+					hourlyWeather.push(new WeatherEntity(title, highTemp, lowTemp, weatherIcon));
+				}
+
+				this.setState({
+					selectedDayWeather: hourlyWeather
+				});
+			}
 		}
 
 		this.setState({
@@ -94,72 +134,59 @@ class App extends React.Component {
 		});
 	}
 
-	findHighestNumber(array) {
-		let highest = 0;
-
-		for (let i = 0; i < array.length; i++) {
-			if (array[i] > highest) {
-				highest = array[i];
-			}
-		}
-		return highest;
-	}
-
-	findLowestNumber(array) {
-		let lowest = 9999999;
-
-		for (let i = 0; i < array.length; i++) {
-			if (array[i] < lowest) {
-				lowest = array[i];
-			}
-		}
-		return lowest;
-	}
-
 	render() {
 		return (
       		<div> 
-      			{this.state.nextFiveDays.map(day => (
-      				<Day day={day} key={day.name}/>
+      			{this.state.nextFiveDays.map(ent => (
+      				<Entity entity={ent} key={ent.title}/>
       		 	))}
+      		 	<div>
+	      		 	{this.state.selectedDayWeather.map(ent => (
+	      				<Entity entity={ent} key={ent.title}/>
+	      		 	))}
+	      		 </div>
       		 </div>
     	);
   	}
 }
 
-function Day({day}) {
+function Entity({entity}) {
+	let today = new Date();
+	let todayName = today.toLocaleDateString("ire", {weekday: 'short'});
+	let cName = (entity.title === todayName ? "today" : "day");
+
 	return(
-		<div className="day">
-			<TheDayName name={day.name} />
-			<WeatherImage weather={day.weather} />
-			<TempValues highTemp={day.highTemp} lowTemp={day.lowTemp} />	
+		<div className={cName}>
+			<EntityTitle title={entity.title} />
+			<WeatherIcon icon={entity.icon} />
+			<TempValues highTemp={entity.highTemp} lowTemp={entity.lowTemp} />	
 		</div>
 	);
 }
 
-Day.propTypes = {
-	day: PropTypes.object.isRequired
+Entity.propTypes = {
+	entity: PropTypes.object.isRequired
 }
 
-const TheDayName = ({name}) => (<div className="name"> {name} </div>)
+const EntityTitle = ({title}) => (<div className="title"> {title} </div>);
 
-TheDayName.propTypes = {
-	name: PropTypes.string.isRequired
+EntityTitle.propTypes = {
+	title: PropTypes.string.isRequired
 }
 
 const TempValues = ({highTemp, lowTemp}) => (
 	<div className="temps">
 		{highTemp}<sup>o</sup> {lowTemp}<sup>o</sup>
 	</div>
-)
+);
 
 TempValues.propTypes = {
 	highTemp: PropTypes.number.isRequired,
 	lowTemp: PropTypes.number.isRequired
 }
 
-function WeatherImage({weather}) {
-	let url = `http://openweathermap.org/img/w/${weather}.png`;
+function WeatherIcon({icon}) {
+	let url = `http://openweathermap.org/img/w/${icon}.png`;
 
 	return(
 		<img
@@ -170,8 +197,8 @@ function WeatherImage({weather}) {
 	);
 }
 
-WeatherImage.propTypes = {
-	weather: PropTypes.string.isRequired
+WeatherIcon.propTypes = {
+	icon: PropTypes.string.isRequired
 }
 
 ReactDOM.render(<App />, document.getElementById('root'));
