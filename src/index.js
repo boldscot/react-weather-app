@@ -48,12 +48,10 @@ class App extends React.Component {
 	componentDidMount() {
 	  axios.get('https://api.openweathermap.org/data/2.5/forecast?id=2960991&APPID=cb6f52333c98f1ed947e3bb5de394074&units=metric')
 	  	.then(res => {
-	  		console.log(res);
       		const data = res.data.list.map(obj => obj);
       		this.setState({
       			data: data
       		});
-
       		this.getFiveDayForecast(this.state.data);
     	});
 	} 
@@ -117,8 +115,8 @@ class App extends React.Component {
 				for (let j = 0; j < data[i].length; j++) {
 					let title = data[i][j].dt_txt.substring(11, 16);
 					let weatherIcon = data[i][j].weather[0].icon;
-					let highTemp = data[i][j].main.temp_max;
-					let lowTemp= data[i][j].main.temp_min;
+					let highTemp = Math.round(data[i][j].main.temp_max);
+					let lowTemp= Math.round(data[i][j].main.temp_min);
 
 					hourlyWeather.push(new WeatherEntity(title, highTemp, lowTemp, weatherIcon));
 				}
@@ -136,25 +134,32 @@ class App extends React.Component {
 
 	render() {
 		return (
-      		<div> 
-      			{this.state.nextFiveDays.map(ent => (
-      				<Entity entity={ent} key={ent.title}/>
-      		 	))}
-      		 	<div>
-	      		 	{this.state.selectedDayWeather.map(ent => (
-	      				<Entity entity={ent} key={ent.title}/>
-	      		 	))}
-	      		 </div>
-      		 </div>
+			<React.Fragment>
+				<div className="days">
+		      		{this.state.nextFiveDays.map(ent => ( 
+		      			<Entity entity={ent} isDay={true} selectedDay={this.state.selectedDay} key={ent.title}/>
+		      		 ))}
+		      	</div>
+		       	<div className="dummy-div"> </div>
+		      	<div className="hours">
+		      		{this.state.selectedDayWeather.map(ent => (
+			      		<Entity entity={ent} isDay={false} key={ent.title}/>
+			      	))}
+		      	</div>
+	      	</React.Fragment>
     	);
   	}
 }
 
-function Entity({entity}) {
-	let today = new Date();
-	let todayName = today.toLocaleDateString("ire", {weekday: 'short'});
-	let cName = (entity.title === todayName ? "today" : "day");
+function Entity({entity, isDay, selectedDay}) {
+	let cName = "entity";
 
+	if (isDay) {
+		if (entity.title === selectedDay) {
+			cName = "selectedDay";
+		}
+	}
+	
 	return(
 		<div className={cName}>
 			<EntityTitle title={entity.title} />
@@ -165,7 +170,8 @@ function Entity({entity}) {
 }
 
 Entity.propTypes = {
-	entity: PropTypes.object.isRequired
+	entity: PropTypes.object.isRequired,
+	isDay: PropTypes.bool.isRequired
 }
 
 const EntityTitle = ({title}) => (<div className="title"> {title} </div>);

@@ -4,10 +4,21 @@
 	float: left;
 }
 
-.day {
+.dummy-div {
+	clear: both;
+	min-height: 5px;
+}
+
+.entity {
 	outline: 1px solid #d5d5d5;
 	width: 80px;
-	float: left;
+	float:left;
+}
+
+.selectedDay {
+	outline: 1px solid black;
+	width: 80px;
+	float:left;
 }
 
 .title {
