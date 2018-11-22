@@ -32,6 +32,10 @@
     width: 50%;
 }
 
+.app {
+	outline: 3px solid red;
+}
+
 .temps {
 	text-align: center;
 }

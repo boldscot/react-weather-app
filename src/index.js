@@ -47,6 +47,7 @@ class App extends React.Component {
 	componentDidMount() {
 	  axios.get('https://api.openweathermap.org/data/2.5/forecast?id=2960991&APPID=cb6f52333c98f1ed947e3bb5de394074&units=metric')
 	  	.then(res => {
+	  		console.log(res);
       		const data = res.data.list.map(obj => obj);
 
       		this.setState({
@@ -74,13 +75,17 @@ class App extends React.Component {
 				if (currentDay === title) {
 					daysWeather.push(entity);
 				} else {
-					weeksWeather.push(daysWeather);
+					if (daysWeather.length > 0) {
+						weeksWeather.push(daysWeather);
+					}
+					
 					daysWeather = [];
 					daysWeather.push(entity);
 					currentDay = title;
 				}
 			}
 	  	}
+	  	
 	  	return weeksWeather;
     } 
 
@@ -103,6 +108,7 @@ class App extends React.Component {
 			if (hours[i].title === this.state.selectedDay) {
 				for (let x = 1; x < hours.length; x++) {
 					let o = hours[x];
+					// make a copy of the object to avoid changes to the data
 					let ent = new WeatherEntity(o.title, o.time, o.highTemp, o.lowTemp, o.icon);
 
 					ent.title = ent.time.substring(0, 5);
@@ -128,7 +134,7 @@ class App extends React.Component {
 		}
 
 		return (
-			<React.Fragment>
+			<div className="app">
 				<div className="days">
 		      		{days.map(ent => ( 
 		      			<Entity 
@@ -143,10 +149,10 @@ class App extends React.Component {
 		       	<div className="dummy-div"> </div>
 		      	<div className="hours">
 		      		{selectedDayWeather.map(ent => (
-			      		<Entity entity={ent} isDay={false} key={ent.title}/>
+			      		<Entity entity={ent} isDay={false} key={ent.title} />
 			      	))}
 		      	</div>
-	      	</React.Fragment>
+	      	</div>
     	);
   	}
 }
