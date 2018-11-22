@@ -1,3 +1,11 @@
+function WeatherEntity(title, time, highTemp, lowTemp, icon) {
+	this.title = title;
+	this.time = time;
+	this.highTemp = highTemp;
+	this.lowTemp = lowTemp;
+	this.icon = icon;
+}
+
 function findHighestNumber(array) {
 	let highest = 0;
 
@@ -22,3 +30,4 @@ function findLowestNumber(array) {
 
 export {findHighestNumber};
 export {findLowestNumber};
+export {WeatherEntity};
