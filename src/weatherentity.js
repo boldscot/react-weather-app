@@ -24,7 +24,9 @@ function Entity({entity, isDay, selectedDay, onClick}) {
 
 Entity.propTypes = {
 	entity: PropTypes.object.isRequired,
-	isDay: PropTypes.bool.isRequired
+	isDay: PropTypes.bool.isRequired,
+	selectedDay: PropTypes.string,
+	onClick: PropTypes.func
 }
 
 export default Entity;
