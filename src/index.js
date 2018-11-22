@@ -4,8 +4,9 @@ import PropTypes from 'prop-types';
 import axios from 'axios';
 import './index.css'; 
 
-function WeatherEntity(title, highTemp, lowTemp, icon) {
+function WeatherEntity(title, time, highTemp, lowTemp, icon) {
 	this.title = title;
+	this.time = time;
 	this.highTemp = highTemp;
 	this.lowTemp = lowTemp;
 	this.icon = icon;
@@ -39,9 +40,7 @@ class App extends React.Component {
 
 		this.state = {
 			data: [],
-			nextFiveDays: [],
-			selectedDay: new Date().toLocaleDateString("ire",{weekday: 'short'}),
-			selectedDayWeather: []
+			selectedDay: new Date().toLocaleDateString("ire",{weekday: 'short'})
 		};
 	}
 
@@ -49,100 +48,101 @@ class App extends React.Component {
 	  axios.get('https://api.openweathermap.org/data/2.5/forecast?id=2960991&APPID=cb6f52333c98f1ed947e3bb5de394074&units=metric')
 	  	.then(res => {
       		const data = res.data.list.map(obj => obj);
+
       		this.setState({
-      			data: data
+      			data: this.createWeatherObjects(data)
       		});
-      		this.getFiveDayForecast(this.state.data);
     	});
-	} 
-
-	getFiveDayForecast(data) {
-		if (data.length === 0) return;
-
-		let currentDate = data[0].dt_txt.substring(8, 10);
-		let days = [];
-		let day = [];
-
-		day.push(data[0]);
-
-		for (let i = 1; i < data.length; ++i) {
-			if (data[i].dt_txt.substring(8, 10) === currentDate.toString()) {
-				day.push(data[i]);
-
-				if(i === data.length-1) {
-					days.push(day);
-				}	
-			} else {
-				//add day to days array
-				days.push(day);
-				// clear day array
-				day = [];
-				++currentDate;
-			}
-		}
-
-		this.createWeatherEntries(days);
-		console.log(days);
 	}
 
-	createWeatherEntries(data) {
-		let nextFiveDays = [];
+	
+    createWeatherObjects(data) {
+    	let daysWeather = [];
+      	let weeksWeather = [];
+      	let currentDay = new Date().toLocaleDateString("ire",{weekday: 'short'});
 
-		for (let i = 0; i < data.length; i++) {
-			let title = new Date(data[i][0].dt_txt).toLocaleDateString("ire",{weekday: 'short'});
-			let weatherIcon = data[i][0].weather[0].icon;
+	  	if (data.length > 0) {
+			for (let i = 0; i < data.length; i++) {
+				let title = new Date(data[i].dt_txt).toLocaleDateString("ire",{weekday: 'short'});
+				let time = data[i].dt_txt.substring(11);
+				let weatherIcon = data[i].weather[0].icon; 
+				let highTemp = data[i].main.temp_max;
+				let lowTemp = data[i].main.temp_min;
 
-			let numbers = [];
-			for (let j = 0; j < data[i].length; j++) {
-				numbers.push(data[i][j].main.temp_max);
-			}
+				let entity = new WeatherEntity(title, time, highTemp, lowTemp, weatherIcon);
 
-			let highTemp = Math.round(findHighestNumber(numbers));
-
-			// clear the number array
-			numbers =[];
-			for (let j = 0; j < data[i].length; j++) {
-				numbers.push(data[i][j].main.temp_min);
-			}
-
-			let lowTemp = Math.round(findLowestNumber(numbers));
-
-			nextFiveDays[i] = new WeatherEntity(title, highTemp, lowTemp, weatherIcon);
-
-			if(title === this.state.selectedDay) {
-				let hourlyWeather = [];
-
-				for (let j = 0; j < data[i].length; j++) {
-					let title = data[i][j].dt_txt.substring(11, 16);
-					let weatherIcon = data[i][j].weather[0].icon;
-					let highTemp = Math.round(data[i][j].main.temp_max);
-					let lowTemp= Math.round(data[i][j].main.temp_min);
-
-					hourlyWeather.push(new WeatherEntity(title, highTemp, lowTemp, weatherIcon));
+				if (currentDay === title) {
+					daysWeather.push(entity);
+				} else {
+					weeksWeather.push(daysWeather);
+					daysWeather = [];
+					daysWeather.push(entity);
+					currentDay = title;
 				}
-
-				this.setState({
-					selectedDayWeather: hourlyWeather
-				});
 			}
-		}
+	  	}
+	  	return weeksWeather;
+    } 
 
+	handleClick(entityTitle) {
 		this.setState({
-			nextFiveDays: nextFiveDays
+			selectedDay: entityTitle
 		});
 	}
 
 	render() {
+		let days = [];
+		let selectedDayWeather = [];
+		const data = this.state.data;
+
+		console.log(data);
+
+		for (let i = 0; i < data.length; i++) {
+			let hours = data[i];
+
+			if (hours[i].title === this.state.selectedDay) {
+				for (let x = 1; x < hours.length; x++) {
+					let o = hours[x];
+					let ent = new WeatherEntity(o.title, o.time, o.highTemp, o.lowTemp, o.icon);
+
+					ent.title = ent.time.substring(0, 5);
+					ent.highTemp = Math.round(ent.highTemp);
+					ent.lowTemp = Math.round(ent.lowTemp);
+
+					selectedDayWeather.push(ent);
+				}
+			}
+
+			let numbers = [];
+			for (let j = 0; j < hours.length; j++) {
+				numbers.push(hours[j].highTemp);
+				numbers.push(hours[j].lowTemp);
+			}
+
+			let ent = data[i][0];
+
+			ent.highTemp = Math.round(findHighestNumber(numbers));
+			ent.lowTemp = Math.round(findLowestNumber(numbers));
+
+			days.push(ent);
+		}
+
 		return (
 			<React.Fragment>
 				<div className="days">
-		      		{this.state.nextFiveDays.map(ent => ( 
-		      			<Entity entity={ent} isDay={true} selectedDay={this.state.selectedDay} key={ent.title}/>
+		      		{days.map(ent => ( 
+		      			<Entity 
+		      				entity={ent} 
+		      				isDay={true} 
+		      				selectedDay={this.state.selectedDay}
+		      				onClick={i => this.handleClick(ent.title)} 
+		      				key={ent.title}
+		      			/>
 		      		 ))}
 		      	</div>
 		       	<div className="dummy-div"> </div>
 		      	<div className="hours">
-		      		{this.state.selectedDayWeather.map(ent => (
+		      		{selectedDayWeather.map(ent => (
 			      		<Entity entity={ent} isDay={false} key={ent.title}/>
 			      	))}
 		      	</div>
@@ -151,7 +151,7 @@ class App extends React.Component {
   	}
 }
 
-function Entity({entity, isDay, selectedDay}) {
+function Entity({entity, isDay, selectedDay, onClick}) {
 	let cName = "entity";
 
 	if (isDay) {
@@ -159,9 +159,9 @@ function Entity({entity, isDay, selectedDay}) {
 			cName = "selectedDay";
 		}
 	}
-	
+
 	return(
-		<div className={cName}>
+		<div className={cName} onClick={onClick}>
 			<EntityTitle title={entity.title} />
 			<WeatherIcon icon={entity.icon} />
 			<TempValues highTemp={entity.highTemp} lowTemp={entity.lowTemp} />	
