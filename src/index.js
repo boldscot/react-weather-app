@@ -2,7 +2,9 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import axios from 'axios';
-import './index.css'; 
+import './index.css';
+import {findHighestNumber, findLowestNumber} from './utility.js';
+import Entity from './weatherentity.js';
 
 function WeatherEntity(title, time, highTemp, lowTemp, icon) {
 	this.title = title;
@@ -10,28 +12,6 @@ function WeatherEntity(title, time, highTemp, lowTemp, icon) {
 	this.highTemp = highTemp;
 	this.lowTemp = lowTemp;
 	this.icon = icon;
-}
-
-function findHighestNumber(array) {
-	let highest = 0;
-
-	for (let i = 0; i < array.length; i++) {
-		if (array[i] > highest) {
-			highest = array[i];
-		}
-	}
-	return highest;
-}
-
-function findLowestNumber(array) {
-	let lowest = 9999999;
-
-	for (let i = 0; i < array.length; i++) {
-		if (array[i] < lowest) {
-			lowest = array[i];
-			}
-	}
-	return lowest;
 }
 
 class App extends React.Component {
@@ -47,7 +27,6 @@ class App extends React.Component {
 	componentDidMount() {
 	  axios.get('https://api.openweathermap.org/data/2.5/forecast?id=2960991&APPID=cb6f52333c98f1ed947e3bb5de394074&units=metric')
 	  	.then(res => {
-	  		console.log(res);
       		const data = res.data.list.map(obj => obj);
 
       		this.setState({
@@ -85,7 +64,6 @@ class App extends React.Component {
 				}
 			}
 	  	}
-	  	
 	  	return weeksWeather;
     } 
 
@@ -99,8 +77,6 @@ class App extends React.Component {
 		let days = [];
 		let selectedDayWeather = [];
 		const data = this.state.data;
-
-		console.log(data);
 
 		for (let i = 0; i < data.length; i++) {
 			let hours = data[i];
@@ -155,29 +131,6 @@ class App extends React.Component {
 	      	</div>
     	);
   	}
-}
-
-function Entity({entity, isDay, selectedDay, onClick}) {
-	let cName = "entity";
-
-	if (isDay) {
-		if (entity.title === selectedDay) {
-			cName = "selectedDay";
-		}
-	}
-
-	return(
-		<div className={cName} onClick={onClick}>
-			<EntityTitle title={entity.title} />
-			<WeatherIcon icon={entity.icon} />
-			<TempValues highTemp={entity.highTemp} lowTemp={entity.lowTemp} />	
-		</div>
-	);
-}
-
-Entity.propTypes = {
-	entity: PropTypes.object.isRequired,
-	isDay: PropTypes.bool.isRequired
 }
 
 const EntityTitle = ({title}) => (<div className="title"> {title} </div>);
