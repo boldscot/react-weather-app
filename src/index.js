@@ -3,16 +3,8 @@ import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 import axios from 'axios';
 import './index.css';
-import {findHighestNumber, findLowestNumber} from './utility.js';
+import {findHighestNumber, findLowestNumber, WeatherEntity} from './utility.js';
 import Entity from './weatherentity.js';
-
-function WeatherEntity(title, time, highTemp, lowTemp, icon) {
-	this.title = title;
-	this.time = time;
-	this.highTemp = highTemp;
-	this.lowTemp = lowTemp;
-	this.icon = icon;
-}
 
 class App extends React.Component {
 	constructor(props) {
@@ -131,39 +123,6 @@ class App extends React.Component {
 	      	</div>
     	);
   	}
-}
-
-const EntityTitle = ({title}) => (<div className="title"> {title} </div>);
-
-EntityTitle.propTypes = {
-	title: PropTypes.string.isRequired
-}
-
-const TempValues = ({highTemp, lowTemp}) => (
-	<div className="temps">
-		{highTemp}<sup>o</sup> {lowTemp}<sup>o</sup>
-	</div>
-);
-
-TempValues.propTypes = {
-	highTemp: PropTypes.number.isRequired,
-	lowTemp: PropTypes.number.isRequired
-}
-
-function WeatherIcon({icon}) {
-	let url = `http://openweathermap.org/img/w/${icon}.png`;
-
-	return(
-		<img
-			src={url}
-			className="weather-icon"
-			alt="weather-icon"
-		/>		
-	);
-}
-
-WeatherIcon.propTypes = {
-	icon: PropTypes.string.isRequired
 }
 
 ReactDOM.render(<App />, document.getElementById('root'));
